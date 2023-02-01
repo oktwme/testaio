@@ -25,9 +25,7 @@ namespace RankerAIO.Champion.Ezreal
                 {
                     if (!item.IsValidTarget(Q.Range)) continue;
 
-                    if (Q.GetHealthPrediction(item) < Q.GetDamage(item) &&
-                        (item.DistanceToPlayer() > GameObjects.Player.GetRealAutoAttackRange() ||
-                        !GameObjects.Player.CanAttack || item.IsUnderAllyTurret()))
+                    if (Q.GetHealthPrediction(item) < Q.GetDamage(item) && (item.DistanceToPlayer() > Player.GetRealAutoAttackRange() || item.IsUnderAllyTurret()))
                     {
                         var pred = Q.GetPrediction(item, false, -1, new CollisionObjects[] { CollisionObjects.YasuoWall, CollisionObjects.Minions });
                         if (pred.Hitchance >= HitChance.High && Q.Cast(pred.CastPosition)) break;

@@ -31,14 +31,20 @@ namespace RankerAIO.Champion.Elise
                     var target = TargetSelector.GetTarget(W.Range, W.DamageType);
                     var predW = W.GetPrediction(target, false, -1, new CollisionObjects[] { CollisionObjects.Minions });
                     var predW3 = W3.GetPrediction(Player, false, -1, new CollisionObjects[] { CollisionObjects.Minions });
-                    if (predW.Hitchance >= HitChance.High && predW3.Hitchance >= HitChance.Medium) W.Cast(target.Position);
-                    else if (predW.Hitchance >= HitChance.High) W.Cast(Player.Position);
+
+                    if (predW.Hitchance >= HitChance.High && predW3.Hitchance >= HitChance.Medium)
+                    {
+                        if(predW.CastPosition.DistanceToPlayer() < Q2.Range) W.Cast(Player.Position);
+                        else W.Cast(predW.CastPosition);
+                    }
                 }
             
                 if(ComboE && E.IsReady())
                 {
                     var target = TargetSelector.GetTarget(E.Range, DamageType.Magical);
                     var delayRange = E.Range - GetMoveSpeedByDelay(target.MoveSpeed, E);
+                    var effectiveRange = Q2.Range + Player.MoveSpeed;
+                    if (effectiveRange > delayRange) effectiveRange = delayRange;
 
                     bool CanE = true;
                     var step = target.DistanceToPlayer() / 20;
@@ -52,8 +58,11 @@ namespace RankerAIO.Champion.Elise
                     {
                         var pred = E.GetPrediction(target, false, -1, new CollisionObjects[] { CollisionObjects.YasuoWall, CollisionObjects.Minions });
                         var hitchanceE = IsSummonerReady(target, "flash") ? HitChance.Dash : HitChance.Immobile;
-                        if (target.DistanceToPlayer() < delayRange && (pred.Hitchance == hitchanceE || pred.Hitchance >= HitChance.High)) E.Cast(pred.CastPosition);
-                        //if (target.DistanceToPlayer() < delayRange && pred.Hitchance >= HitChance.High) E.Cast(pred.CastPosition);
+                        if (target.DistanceToPlayer() < effectiveRange)
+                        {
+                            if(pred.Hitchance == hitchanceE) E.Cast(pred.CastPosition);
+                            else if(pred.Hitchance >= HitChance.High) E.Cast(pred.CastPosition);
+                        }
                     }
                 }
             

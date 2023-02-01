@@ -31,6 +31,42 @@ namespace RankerAIO.Champion.Ezreal
             UserMenu.Init();
 
             Game.OnUpdate += GameOnUpdate;
+            Orbwalker.OnBeforeAttack += Orbwalker_OnBeforeAttack;
+            Orbwalker.OnAfterAttack += Orbwalker_OnAfterAttack;
+        }
+
+        private static bool LastHitUseQ => ChampionMenu["LastHit"]["LHQ"].GetValue<MenuBool>().Enabled;
+        private static int LastHitMana => ChampionMenu["LastHit"]["LHMana"].GetValue<MenuSlider>().Value;
+        private static void Orbwalker_OnBeforeAttack(object sender, BeforeAttackEventArgs e)
+        {
+            if (GameObjects.Player.ManaPercent < LastHitMana) return;
+
+            if (LastHitUseQ && Q.IsReady())
+            {
+                var target = Orbwalker.GetTarget() as AIMinionClient;
+
+                if(target.IsMinion() && Q.GetHealthPrediction(target) < Q.GetDamage(target))
+                {
+                    var pred = Q.GetPrediction(target, false, -1, new CollisionObjects[] { CollisionObjects.YasuoWall, CollisionObjects.Minions });
+                    if (pred.Hitchance >= HitChance.High) Q.Cast(pred.CastPosition);
+                }
+            }
+        }
+
+        private static void Orbwalker_OnAfterAttack(object sender, AfterAttackEventArgs e)
+        {
+            if (GameObjects.Player.ManaPercent < LastHitMana) return;
+
+            if (LastHitUseQ && Q.IsReady())
+            {
+                var target = GameObjects.EnemyMinions
+                    .OrderBy(x => x.Health)
+                    .Where(x => x.IsValidTarget(Q.Range) && x.DistanceToPlayer() > Player.GetRealAutoAttackRange() && Q.GetHealthPrediction(x) < Q.GetDamage(x))
+                    .FirstOrDefault();
+
+                var pred = Q.GetPrediction(target, false, -1, new CollisionObjects[] { CollisionObjects.YasuoWall, CollisionObjects.Minions });
+                if (pred.Hitchance >= HitChance.High) Q.Cast(pred.CastPosition);
+            }
         }
 
         private static void GameOnUpdate(EventArgs args)
@@ -51,7 +87,6 @@ namespace RankerAIO.Champion.Ezreal
                         LaneClear.OnLoad();
                         break;
                     case OrbwalkerMode.LastHit:
-                        LastHit.OnLoad();
                         break;
                     case OrbwalkerMode.Flee:
                         break;
