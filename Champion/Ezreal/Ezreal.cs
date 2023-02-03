@@ -41,7 +41,7 @@ namespace RankerAIO.Champion.Ezreal
         {
             if (GameObjects.Player.ManaPercent < LastHitMana) return;
 
-            if (LastHitUseQ && Q.IsReady())
+            if (Orbwalker.ActiveMode == OrbwalkerMode.LastHit && LastHitUseQ && Q.IsReady())
             {
                 var target = Orbwalker.GetTarget() as AIMinionClient;
 
@@ -57,7 +57,7 @@ namespace RankerAIO.Champion.Ezreal
         {
             if (GameObjects.Player.ManaPercent < LastHitMana) return;
 
-            if (LastHitUseQ && Q.IsReady())
+            if (Orbwalker.ActiveMode == OrbwalkerMode.LastHit && LastHitUseQ && Q.IsReady())
             {
                 var target = GameObjects.EnemyMinions
                     .OrderBy(x => x.Health)

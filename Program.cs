@@ -28,7 +28,8 @@ namespace RankerAIO
                     Champion.Elise.Elise.Init();
                     break;
                 default:
-                    Game.Print("Not Support : {0}", GameObjects.Player.CharacterName);
+                    //Game.Print("Not Support : {0}", GameObjects.Player.CharacterName);
+                    Champion.Test.Test.Init();
                     break;
             }
         }

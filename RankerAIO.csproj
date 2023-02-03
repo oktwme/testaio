@@ -2,7 +2,7 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{EC35CB0A-7EDC-44F4-988C-4894B3F4BA02}</ProjectGuid>
     <OutputType>Exe</OutputType>
@@ -90,7 +90,9 @@
     <Compile Include="Champion\Ezreal\LastHit.cs" />
     <Compile Include="Champion\Ezreal\Ezreal.cs" />
     <Compile Include="Champion\Ezreal\UserMenu.cs" />
+    <Compile Include="Champion\Test\Test.cs" />
     <Compile Include="Common\Base.cs" />
+    <Compile Include="Common\RankerCommon.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">

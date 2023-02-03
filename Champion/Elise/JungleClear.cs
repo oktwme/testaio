@@ -33,7 +33,16 @@ namespace RankerAIO.Champion.Elise
                 if (target.IsJungle()) W.Cast(position);
             }
 
-            if (JungleClearR && R.IsReady() && !Elise.IsSpider() && !Q.IsReady() && !W.IsReady()) Elise.CastR();
+            if (JungleClearR && R.IsReady() && !Elise.IsSpider() && !Q.IsReady() && !W.IsReady())
+            {
+                Elise.CoolTimeQ = Q.CooldownTime;
+                Elise.LastGameTimeQ = Game.Time;
+                Elise.CoolTimeW = W.CooldownTime;
+                Elise.LastGameTimeW = Game.Time;
+                Elise.CoolTimeE = E.CooldownTime;
+                Elise.LastGameTimeE = Game.Time;
+                if (Q2.CooldownTime > 2.0f && W2.CooldownTime > 2.0f) R.Cast();
+            }
 
             if (JungleClearQ2 && Q2.IsReady() && Elise.IsSpider())
             {
@@ -46,7 +55,9 @@ namespace RankerAIO.Champion.Elise
                 List<bool> IsChangeForm = new List<bool>();
                 IsChangeForm.Add(Game.Time - Elise.LastGameTimeQ > Elise.CoolTimeQ ? true : false);
                 IsChangeForm.Add(Game.Time - Elise.LastGameTimeW > Elise.CoolTimeW ? true : false);
-                if (IsChangeForm.Where(x => x == false).Count() == 0) R.Cast();
+
+                bool CanChange = Q2.CooldownTime > 1.5f && W2.CooldownTime > 1.5f;
+                if (IsChangeForm.Where(x => x == false).Count() == 0 && CanChange) R.Cast();
             }
         }
 

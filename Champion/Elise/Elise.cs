@@ -27,7 +27,7 @@ namespace RankerAIO.Champion.Elise
             R = new Spell(SpellSlot.R, 0f);
 
             W.SetSkillshot(0.125f, 75f, 1000f, true, SpellType.Line);
-            W3.SetSkillshot(0.125f, 150f, 0f, true, SpellType.Circle);
+            W3.SetSkillshot(0.125f, 137.5f, 1000f, true, SpellType.Circle);
             E.SetSkillshot(0.25f, 55f, 1600f, true, SpellType.Line);
 
             Q.DamageType = W.DamageType = E.DamageType = DamageType.Magical;
@@ -50,25 +50,6 @@ namespace RankerAIO.Champion.Elise
             return Player.GetSpell(SpellSlot.R).Name.ToLower().Contains("spider");
         }
 
-        public static void CastR()
-        {
-            CoolTimeQ = Q.CooldownTime;
-            LastGameTimeQ = Game.Time;
-            CoolTimeW = W.CooldownTime;
-            LastGameTimeW = Game.Time;
-            CoolTimeE = E.CooldownTime;
-            LastGameTimeE = Game.Time;
-            R.Cast();
-        }
-
-        private static bool ComboW2 => ChampionMenu["Combo"]["CW2"].GetValue<MenuBool>().Enabled;
-        private static bool JungleClearW2 => ChampionMenu["JungleClear"]["JCW2"].GetValue<MenuBool>().Enabled;
-        private static void Orbwalker_OnAfterAttack(object sender, AfterAttackEventArgs e)
-        {
-            if (ComboW2 && IsSpider() && W2.IsReady() && !Orbwalker.LastTarget.IsMinion()) W2.Cast();
-            if (JungleClearW2 && IsSpider() && W2.IsReady() && Orbwalker.LastTarget.IsJungle()) W2.Cast();
-        }
-
         private static bool JungleClearE => ChampionMenu["JungleClear"]["JCE"].GetValue<MenuBool>().Enabled;
         private static void Orbwalker_OnBeforeAttack(object sender, BeforeAttackEventArgs e)
         {
@@ -81,6 +62,14 @@ namespace RankerAIO.Champion.Elise
                     if (pred.Hitchance >= HitChance.High) E.Cast(pred.CastPosition);
                 }
             }
+        }
+
+        private static bool ComboW2 => ChampionMenu["Combo"]["CW2"].GetValue<MenuBool>().Enabled;
+        private static bool JungleClearW2 => ChampionMenu["JungleClear"]["JCW2"].GetValue<MenuBool>().Enabled;
+        private static void Orbwalker_OnAfterAttack(object sender, AfterAttackEventArgs e)
+        {
+            if (ComboW2 && IsSpider() && W2.IsReady() && !Orbwalker.LastTarget.IsMinion()) W2.Cast();
+            if (JungleClearW2 && IsSpider() && W2.IsReady() && Orbwalker.LastTarget.IsJungle()) W2.Cast();
         }
 
         private static void GameOnUpdate(EventArgs args)

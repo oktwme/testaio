@@ -46,17 +46,16 @@ namespace RankerAIO.Champion.Elise
                     }
                     else
                     {
-                        var minHitCount = 4;
-                        if (minions.Count() <= 3) minHitCount = 2;
+                        var minHitCount = 5;
+                        if (minions.Count() >= 7) minHitCount = 4;
+                        else if (minions.Count() >= 6) minHitCount = 4;
+                        else if (minions.Count() >= 5) minHitCount = 3;
+                        else if (minions.Count() >= 4) minHitCount = 3;
+                        else if (minions.Count() == 3) minHitCount = 3;
+                        else if (minions.Count() <= 2) minHitCount = 2;
 
                         var predFW = W3.GetLineFarmLocation(minions);
                         if (predFW.MinionsHit >= minHitCount) W.Cast(predFW.Position);
-
-                        if (W.IsReady())
-                        {
-                            minHitCount = 3;
-                            if (predFW.MinionsHit >= minHitCount) W.Cast(predFW.Position);
-                        }
                     }
                 }
             }
