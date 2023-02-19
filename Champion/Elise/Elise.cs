@@ -45,31 +45,65 @@ namespace RankerAIO.Champion.Elise
         public static float CoolTimeW = 0, LastGameTimeW = 0;
         public static float CoolTimeE = 0, LastGameTimeE = 0;
 
+        public static float CoolTimeQ2 = 0, LastGameTimeQ2 = 0;
+        public static float CoolTimeW2 = 0, LastGameTimeW2 = 0;
+        public static float CoolTimeE2 = 0, LastGameTimeE2 = 0;
+
+        /// <summary>
+        /// 스킬을 사용할 수 있는 상태인지 확인
+        /// </summary>
+        /// <param name="slot"></param>
+        /// <returns>사용할 수 있다면 True</returns>
+        public static bool IsCast(string slot)
+        {
+            switch (slot)
+            {
+                case "Q":
+                    return Game.Time - LastGameTimeQ >= CoolTimeQ;
+                case "W":
+                    return Game.Time - LastGameTimeW >= CoolTimeW;
+                case "E":
+                    return Game.Time - LastGameTimeE >= CoolTimeE;
+                case "Q2":
+                    return Game.Time - LastGameTimeQ2 >= CoolTimeQ2;
+                case "W2":
+                    return Game.Time - LastGameTimeW2 >= CoolTimeW2;
+                case "E2":
+                    return Game.Time - LastGameTimeE2 >= CoolTimeE2;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// 입력한 쿨타임 보다 많이 남았는지 확인
+        /// </summary>
+        /// <param name="spell"></param>
+        /// <param name="time"></param>
+        /// <returns>입력한 쿨타임 보다 많이 남았다면 True</returns>
+        public static bool IsCoolDown(Spell spell, float time)
+        {
+            return (spell.Level >= 1 && spell.CooldownTime > time) || spell.Level == 0;
+        }
+
+        /// <summary>
+        /// 거미폼인지 확인
+        /// </summary>
+        /// <returns>거미폼이라면 True</returns>
         public static bool IsSpider()
         {
             return Player.GetSpell(SpellSlot.R).Name.ToLower().Contains("spider");
         }
-
-        private static bool JungleClearE => ChampionMenu["JungleClear"]["JCE"].GetValue<MenuBool>().Enabled;
+        
         private static void Orbwalker_OnBeforeAttack(object sender, BeforeAttackEventArgs e)
         {
-            if (JungleClearE && E.IsReady() && !IsSpider() && Player.Level < 6 && Player.HealthPercent < 40)
-            {
-                var target = Orbwalker.GetTarget() as AIMinionClient;
-                if (target.IsJungle() && target.MaxHealth > 1000)
-                {
-                    var pred = E.GetPrediction(target, false, -1, new CollisionObjects[] { CollisionObjects.YasuoWall, CollisionObjects.Minions });
-                    if (pred.Hitchance >= HitChance.High) E.Cast(pred.CastPosition);
-                }
-            }
+            JungleClear.CastE();
         }
 
-        private static bool ComboW2 => ChampionMenu["Combo"]["CW2"].GetValue<MenuBool>().Enabled;
-        private static bool JungleClearW2 => ChampionMenu["JungleClear"]["JCW2"].GetValue<MenuBool>().Enabled;
         private static void Orbwalker_OnAfterAttack(object sender, AfterAttackEventArgs e)
         {
-            if (ComboW2 && IsSpider() && W2.IsReady() && !Orbwalker.LastTarget.IsMinion()) W2.Cast();
-            if (JungleClearW2 && IsSpider() && W2.IsReady() && Orbwalker.LastTarget.IsJungle()) W2.Cast();
+            Combo.CastW2();
+            JungleClear.CastW2();
         }
 
         private static void GameOnUpdate(EventArgs args)
@@ -79,12 +113,13 @@ namespace RankerAIO.Champion.Elise
                 switch (Orbwalker.ActiveMode)
                 {
                     case OrbwalkerMode.Combo:
-                        Combo.OnLoad();
+                        Combo.BasicLogic();
                         break;
                     case OrbwalkerMode.Harass:
+                        for (int i = 0; i < Player.Buffs.Length; i++) Console.WriteLine(i + " : " + Player.Buffs[i].Name);
                         break;
                     case OrbwalkerMode.LaneClear:
-                        JungleClear.OnLoad();
+                        JungleClear.BasicLogic();
                         LaneClear.OnLoad();
                         break;
                     case OrbwalkerMode.LastHit:

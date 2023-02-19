@@ -18,12 +18,26 @@ namespace RankerAIO.Champion.Elise
         private static bool ComboR => ChampionMenu["Combo"]["CR"].GetValue<MenuBool>().Enabled;
 
         private static bool ComboQ2 => ChampionMenu["Combo"]["CQ2"].GetValue<MenuBool>().Enabled;
+        private static bool ComboW2 => ChampionMenu["Combo"]["CW2"].GetValue<MenuBool>().Enabled;
         private static bool ComboR2 => ChampionMenu["Combo"]["CR2"].GetValue<MenuBool>().Enabled;
 
-        public static void OnLoad()
+        public static void BasicLogic()
+        {
+            CastQ();
+            CastW();
+            CastE();
+            CastR();
+            CastQ2();
+            CastR2();
+        }
+
+        public static void CastQ()
         {
             if (ComboQ && Q.IsReady() && !Elise.IsSpider()) Q.Cast(TargetSelector.GetTarget(Q.Range, Q.DamageType));
+        }
 
+        public static void CastW()
+        {
             if (ComboW && W.IsReady() && !Q.IsReady() && !Elise.IsSpider())
             {
                 var target = TargetSelector.GetTarget(W.Range, W.DamageType);
@@ -31,10 +45,13 @@ namespace RankerAIO.Champion.Elise
                 var predW3 = W3.GetPrediction(Player, false, -1, new CollisionObjects[] { CollisionObjects.YasuoWall, CollisionObjects.Minions });
 
                 if (target.DistanceToPlayer() < 275) W.Cast(Player.Position);
-                else if(predW.Hitchance >= HitChance.High && predW3.Hitchance >= HitChance.Medium) W.Cast(predW.CastPosition);
+                else if (predW.Hitchance >= HitChance.High && predW3.Hitchance >= HitChance.Medium) W.Cast(predW.CastPosition);
                 else if (target.DistanceToPlayer() < Q2.Range + GetMoveSpeedByDelay(Player.MoveSpeed, Q2)) W.Cast(predW.CastPosition.Rotated(3));
             }
+        }
 
+        public static void CastE()
+        {
             if (ComboE && E.IsReady() && !Elise.IsSpider())
             {
                 var target = TargetSelector.GetTarget(E.Range, DamageType.Magical);
@@ -58,12 +75,23 @@ namespace RankerAIO.Champion.Elise
                     {
                         if (pred.Hitchance == hitchanceE && !IsImmunity(target)) E.Cast(pred.CastPosition);
                         else if (pred.Hitchance >= HitChance.High && !IsImmunity(target)) E.Cast(pred.CastPosition);
-                        else if ((pred.Hitchance == HitChance.Collision || IsImmunity(target)) && target.DistanceToPlayer() < Q2.Range) CastHumanR();
+                        else if ((pred.Hitchance == HitChance.Collision || IsImmunity(target)) && target.DistanceToPlayer() < Q2.Range) CastRwithoutE();
                     }
                 }
             }
+        }
 
-            if (ComboR && R.IsReady() && !Elise.IsSpider() && !Q.IsReady() && !W.IsReady() && !E.IsReady())
+        public static void CastR()
+        {
+            var target = Orbwalker.GetTarget() as AIHeroClient;
+            bool fastChange = target.DistanceToPlayer() < 125 + Player.BaseMoveSpeed && Player.Level < 3;
+
+            bool QIR = !Q.IsReady() || Q.Level == 0;
+            bool WIR = !W.IsReady() || W.Level == 0;
+            bool EIR = !E.IsReady() || E.Level == 0;
+
+            bool CanChange = Elise.IsCoolDown(Q, 1.2f) && Elise.IsCoolDown(W, 1.2f) && Elise.IsCoolDown(E, 1.2f) || fastChange;
+            if (ComboR && R.IsReady() && !Elise.IsSpider() && QIR && WIR && EIR && CanChange)
             {
                 Elise.CoolTimeQ = Q.CooldownTime;
                 Elise.LastGameTimeQ = Game.Time;
@@ -71,37 +99,57 @@ namespace RankerAIO.Champion.Elise
                 Elise.LastGameTimeW = Game.Time;
                 Elise.CoolTimeE = E.CooldownTime;
                 Elise.LastGameTimeE = Game.Time;
-                if (Q.CooldownTime > 1.2f && W.CooldownTime > 1.2f && E.CooldownTime > 1.2f) R.Cast();
+                R.Cast();
             }
+        }
 
+        private static void CastRwithoutE()
+        {
+            bool QIR = !Q.IsReady() || Q.Level == 0;
+            bool WIR = !W.IsReady() || W.Level == 0;
+
+            bool CanChange = Elise.IsCoolDown(Q, 1.2f) && Elise.IsCoolDown(W, 1.2f);
+            if (ComboR && R.IsReady() && !Elise.IsSpider() && QIR && WIR && CanChange)
+            {
+                Elise.CoolTimeQ = Q.CooldownTime;
+                Elise.LastGameTimeQ = Game.Time;
+                Elise.CoolTimeW = W.CooldownTime;
+                Elise.LastGameTimeW = Game.Time;
+                Elise.CoolTimeE = E.CooldownTime;
+                Elise.LastGameTimeE = Game.Time;
+                if (Elise.IsCoolDown(Q, 1.2f) && Elise.IsCoolDown(W, 1.2f)) R.Cast();
+            }
+        }
+
+        public static void CastQ2()
+        {
             if (ComboQ2 && Q2.IsReady() && Elise.IsSpider())
             {
                 var target = TargetSelector.GetTarget(E.Range, DamageType.Magical);
                 Q2.Cast(target);
             }
-
-            if (ComboR2 && R.IsReady() && Elise.IsSpider())
-            {
-                List<bool> IsChangeForm = new List<bool>();
-                IsChangeForm.Add(Game.Time - Elise.LastGameTimeQ > Elise.CoolTimeQ ? true : false);
-                IsChangeForm.Add(Game.Time - Elise.LastGameTimeW > Elise.CoolTimeW ? true : false);
-                IsChangeForm.Add(Game.Time - Elise.LastGameTimeE > Elise.CoolTimeE ? true : false);
-                bool CanChange = Q2.CooldownTime > 1.5f && W2.CooldownTime > 1.5f;
-                if (IsChangeForm.Where(x => x == false).Count() == 0 && CanChange) R.Cast();
-            }
         }
 
-        private static void CastHumanR()
+        public static void CastW2()
         {
-            if (ComboR && R.IsReady() && !Elise.IsSpider() && !Q.IsReady() && !W.IsReady())
+            if (ComboW2 && Elise.IsSpider() && W2.IsReady() && !Orbwalker.LastTarget.IsMinion()) W2.Cast();
+        }
+
+        public static void CastR2()
+        {
+            if (ComboR2 && R.IsReady() && Elise.IsSpider())
             {
-                Elise.CoolTimeQ = Q.CooldownTime;
-                Elise.LastGameTimeQ = Game.Time;
-                Elise.CoolTimeW = W.CooldownTime;
-                Elise.LastGameTimeW = Game.Time;
-                Elise.CoolTimeE = E.CooldownTime;
-                Elise.LastGameTimeE = Game.Time;
-                if (Q.CooldownTime > 1.2f && W.CooldownTime > 1.2f) R.Cast();
+                bool CanChange = Elise.IsCoolDown(Q2, 1.5f) && Elise.IsCoolDown(W2, 1.5f) && !Player.HasBuff("EliseSpiderW");
+                if (Elise.IsCast("Q") && Elise.IsCast("W") && Elise.IsCast("E") && CanChange)
+                {
+                    Elise.CoolTimeQ2 = Q2.CooldownTime;
+                    Elise.LastGameTimeQ2 = Game.Time;
+                    Elise.CoolTimeW2 = W2.CooldownTime;
+                    Elise.LastGameTimeW2 = Game.Time;
+                    Elise.CoolTimeE2 = E2.CooldownTime;
+                    Elise.LastGameTimeE2 = Game.Time;
+                    R.Cast();
+                }
             }
         }
 
